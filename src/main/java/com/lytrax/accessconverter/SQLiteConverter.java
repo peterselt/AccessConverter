@@ -9,6 +9,7 @@ import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
+import com.healthmarketscience.jackcess.PropertyMap;
 import java.io.File;
 import java.io.IOException;
 //import java.util.ArrayList;
@@ -107,6 +108,20 @@ public class SQLiteConverter extends Converter {
             String name = column.getName();
             String type = column.getType().toString().toUpperCase();
             //short length = column.getLength();
+            String required = "";
+
+            try {
+                System.console().printf("`%s`", column.getProperties());
+
+                Boolean isRequired = (Boolean)column.getProperties().getValue("required");
+                if (isRequired != null && isRequired == true) {
+                    required = "NOT NULL";
+                }
+
+                System.console().printf("Column is required `%s`\n", isRequired);
+            } catch (IOException e) {
+                //ignore
+            }
             
             if(!isFirst)
                 sql.appendln(",");
@@ -120,26 +135,26 @@ public class SQLiteConverter extends Converter {
                     if(column.isAutoNumber()) {
                         sql.append(String.format("`%s` INTEGER PRIMARY KEY AUTOINCREMENT", name));
                     } else {
-                        sql.append(String.format("`%s` INT NOT NULL DEFAULT 0", name));
+                        sql.append(String.format("`%s` INT `%s` DEFAULT 0", name, required));
                     }
                     break;
                 case "FLOAT":
-                    sql.append(String.format("`%s` FLOAT NOT NULL DEFAULT 0", name));
+                    sql.append(String.format("`%s` FLOAT `%s` DEFAULT 0", name, required));
                     break;
                 case "DOUBLE":
-                    sql.append(String.format("`%s` DOUBLE NOT NULL DEFAULT 0", name));
+                    sql.append(String.format("`%s` DOUBLE `%s` DEFAULT 0", name, required));
                     break;
                 case "NUMERIC":
-                    sql.append(String.format("`%s` DECIMAL(28,0) NOT NULL DEFAULT 0", name));
+                    sql.append(String.format("`%s` DECIMAL(28,0) `%s` DEFAULT 0", name, required));
                     break;
                 case "MONEY":
-                    sql.append(String.format("`%s` DECIMAL(15,4) NOT NULL DEFAULT 0", name));
+                    sql.append(String.format("`%s` DECIMAL(15,4) `%s` DEFAULT 0", name, required));
                     break;
                 case "BOOLEAN":
-                    sql.append(String.format("`%s` TINYINT NOT NULL DEFAULT 0", name));
+                    sql.append(String.format("`%s` TINYINT `%s` DEFAULT 0", name, required));
                     break;
                 case "SHORT_DATE_TIME":
-                    sql.append(String.format("`%s` DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00'", name));
+                    sql.append(String.format("`%s` DATETIME `%s` DEFAULT '0000-00-00 00:00:00'", name, required));
                     break;
                 case "MEMO":
                     sql.append(String.format("`%s` TEXT", name));
